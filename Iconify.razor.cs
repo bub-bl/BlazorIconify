@@ -9,8 +9,9 @@ public partial class Iconify : ComponentBase
 {
     private const string API = "https://api.iconify.design/";
 
+    private string _previousIcon = string.Empty;
     private string _svg = string.Empty;
-    
+
     [Inject] public HttpClient HttpClient { get; set; } = null!;
     [Inject] public ILocalStorageService LocalStorage { get; set; } = null!;
 
@@ -23,30 +24,44 @@ public partial class Iconify : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        var prefix = Icon.Split(':')[0];
-        var icon = Icon.Split(':')[1];
-
-        if (await IsCached(prefix, icon))
+        // Only fetch the icon if it has changed
+        if (_previousIcon != Icon)
         {
-            _svg = await LocalStorage.GetItemAsStringAsync(Icon);
-        }
-        else
-        {
-            _svg = await FetchIconAsync(IconUrl);
-            await LocalStorage.SetItemAsStringAsync(Icon, _svg);
-        }
-        
-        // TODO - Find a better way to do this
-        // Remove the fill attribute, we can't define custom color without it
-        _svg = _svg.Replace("fill=\"white\"", "")
-            // Adding class to the svg element
-            .Replace("xmlns=\"http://www.w3.org/2000/svg\"",
-                $"xmlns=\"http://www.w3.org/2000/svg\" class=\"{Attributes.Get("i-class")}\"");
+            var prefix = Icon.Split(':')[0];
+            var icon = Icon.Split(':')[1];
 
-        if (string.IsNullOrEmpty(_svg))
-            throw new Exception($"Failed to fetch icon {this}");
-        
-        StateHasChanged();
+            if (await IsCached(prefix, icon))
+            {
+                _svg = await LocalStorage.GetItemAsStringAsync(Icon);
+                _previousIcon = Icon;
+            }
+            else
+            {
+                _svg = await FetchIconAsync(IconUrl);
+                
+                if (string.IsNullOrEmpty(_svg))
+                {
+                    Console.WriteLine($"Failed to fetch icon {this}");
+                    return;
+                }
+                
+                await LocalStorage.SetItemAsStringAsync(Icon, _svg);
+            }
+
+            // TODO - Find a better way to do this
+            // Remove the fill attribute, we can't define custom color without it
+            _svg = _svg.Replace("fill=\"white\"", "")
+                // Adding class to the svg element
+                .Replace("xmlns=\"http://www.w3.org/2000/svg\"",
+                    $"xmlns=\"http://www.w3.org/2000/svg\" class=\"{Attributes.Get("i-class")}\"");
+
+            if (string.IsNullOrEmpty(_svg))
+                throw new Exception($"Failed to fetch icon {this}");
+
+            StateHasChanged();
+
+            _previousIcon = Icon;
+        }
     }
 
     private async Task<bool> IsCached(string prefix, string icon)
@@ -59,11 +74,12 @@ public partial class Iconify : ComponentBase
     {
         var response = await HttpClient.GetByteArrayAsync(url);
         var iconContents = Encoding.UTF8.GetString(response);
-
+        
         // this API doesn't actually return a 404 status code :( check the document for '404' itself...
-        if (response is { Length: 0 } or null)
-            throw new Exception($"Failed to fetch icon {this}");
-
+        if (iconContents is not "404" && response is not ({ Length: 0 } or null)) 
+            return iconContents;
+        
+        iconContents = string.Empty;
         return iconContents;
     }
 }
