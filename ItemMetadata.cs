@@ -1,7 +1,10 @@
-﻿namespace Iconify;
+﻿using System.Text.Json.Serialization;
+
+namespace Iconify;
 
 public record IconMetadata
 {
-	public int Version { get; set; }
-	public DateTime TimeFetched { get; set; }
+    [JsonPropertyName("version")] public int Version { get; set; }
+    [JsonPropertyName("content")] public string Content { get; set; }
+    [JsonPropertyName("time_fetched")] public DateTime TimeFetched { get; set; }
 }
