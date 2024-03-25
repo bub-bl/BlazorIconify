@@ -1,8 +1,3 @@
-﻿<main @attributes="@Attributes" class="flex justify-center items-center">
-    @* <img class="text-red-400 fill-red-400" src="@IconUrl" alt=""> *@
+﻿<main @attributes="@Attributes" class="flex justify-center items-center @Attributes.Class("class")">
     @((MarkupString)_svg)
 </main>
-
-@code {
-
-}

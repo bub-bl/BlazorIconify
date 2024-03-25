@@ -1,20 +1,21 @@
 ﻿using System.Text;
 using Blazored.LocalStorage;
+using Iconify.Extensions;
 using Microsoft.AspNetCore.Components;
 
 namespace Iconify;
 
 public partial class Iconify : ComponentBase
 {
-    public const string API = "https://api.iconify.design/";
+    private const string API = "https://api.iconify.design/";
 
     private string _svg = string.Empty;
     
-    [Inject] public HttpClient HttpClient { get; set; }
-    [Inject] public ILocalStorageService LocalStorage { get; set; }
+    [Inject] public HttpClient HttpClient { get; set; } = null!;
+    [Inject] public ILocalStorageService LocalStorage { get; set; } = null!;
 
     [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object> Attributes { get; set; }
+    public Dictionary<string, object> Attributes { get; set; } = null!;
 
     [Parameter] public string Icon { get; set; } = "fluent-emoji-flat:alarm-clock";
 
@@ -35,11 +36,12 @@ public partial class Iconify : ComponentBase
             await LocalStorage.SetItemAsStringAsync(Icon, _svg);
         }
         
+        // TODO - Find a better way to do this
         // Remove the fill attribute, we can't define custom color without it
         _svg = _svg.Replace("fill=\"white\"", "")
             // Adding class to the svg element
             .Replace("xmlns=\"http://www.w3.org/2000/svg\"",
-                $"xmlns=\"http://www.w3.org/2000/svg\" class=\"{Attributes.GetValueOrDefault("i-class")}\"");
+                $"xmlns=\"http://www.w3.org/2000/svg\" class=\"{Attributes.Class("i-class")}\"");
 
         if (string.IsNullOrEmpty(_svg))
             throw new Exception($"Failed to fetch icon {this}");
