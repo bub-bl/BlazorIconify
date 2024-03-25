@@ -10,6 +10,7 @@ public sealed class Registry(ILocalStorageService LocalStorage)
 
     public async Task AddIcon(IconMetadata metadata)
     {
+        if(string.IsNullOrEmpty(metadata.Name)) return;
         if (IsRegistered(metadata.Name)) return;
 
         _icons.Add(metadata);
@@ -18,8 +19,18 @@ public sealed class Registry(ILocalStorageService LocalStorage)
 
     public async Task<IconMetadata?> GetIcon(string icon)
     {
+        if (string.IsNullOrEmpty(icon)) return null;
+        
         var icons = await GetCachedIcons();
         return icons.FirstOrDefault(x => x.Name == icon);
+    }
+    
+    public async Task<bool> IsCached(string icon)
+    {
+        if (string.IsNullOrEmpty(icon)) return false;
+        
+        var icons = await GetCachedIcons();
+        return icons.Exists(x => x.Name == icon);
     }
 
     public async Task Clear()
