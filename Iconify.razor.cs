@@ -68,7 +68,7 @@ public partial class Iconify : ComponentBase
             StateHasChanged();
         }
     }
-
+    
     private async Task<string> FetchIconAsync(string url)
     {
         if (string.IsNullOrEmpty(Icon)) return string.Empty;
@@ -76,7 +76,6 @@ public partial class Iconify : ComponentBase
         var response = await HttpClient.GetByteArrayAsync(url);
         var iconContents = Encoding.UTF8.GetString(response);
 
-        // this API doesn't actually return a 404 status code :( check the document for '404' itself...
         if (iconContents is not "404" && response is not ({ Length: 0 } or null))
             return iconContents;
 
