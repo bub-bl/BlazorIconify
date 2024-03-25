@@ -41,7 +41,7 @@ public partial class Iconify : ComponentBase
         _svg = _svg.Replace("fill=\"white\"", "")
             // Adding class to the svg element
             .Replace("xmlns=\"http://www.w3.org/2000/svg\"",
-                $"xmlns=\"http://www.w3.org/2000/svg\" class=\"{Attributes.Class("i-class")}\"");
+                $"xmlns=\"http://www.w3.org/2000/svg\" class=\"{Attributes.Get("i-class")}\"");
 
         if (string.IsNullOrEmpty(_svg))
             throw new Exception($"Failed to fetch icon {this}");
