@@ -19,7 +19,7 @@ public partial class Iconify : ComponentBase
 
     [Parameter] public string Icon { get; set; } = "fluent-emoji-flat:alarm-clock";
 
-    public string IconUrl => $"{API}{Icon.Replace(':', '/')}.svg?color=white";
+    private string IconUrl => $"{API}{Icon.Replace(':', '/')}.svg?color=white";
 
     protected override async Task OnParametersSetAsync()
     {
