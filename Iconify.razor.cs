@@ -13,7 +13,7 @@ public partial class Iconify : ComponentBase
     private string _svg = string.Empty;
 
     [Inject] public HttpClient HttpClient { get; set; } = null!;
-    [Inject] public ILocalStorageService LocalStorage { get; set; }
+    [Inject] public ILocalStorageService LocalStorage { get; set; } = null!;
     [Inject] public Registry Registry { get; set; } = null!;
 
     [Parameter(CaptureUnmatchedValues = true)]
