@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 using Blazored.LocalStorage;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Iconify;
+namespace Iconify.Extensions;
 
-public static class Extensions
+public static class IconifyExtension
 {
     public static IServiceCollection AddIconify(this IServiceCollection services) => services.AddBlazoredLocalStorage(
         config =>
