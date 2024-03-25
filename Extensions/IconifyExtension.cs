@@ -8,7 +8,7 @@ namespace Iconify.Extensions;
 public static class IconifyExtension
 {
     public static IServiceCollection AddIconify(this IServiceCollection services) => services
-        .AddSingleton<Registry>()
+        .AddScoped<Registry>()
         .AddBlazoredLocalStorage(
             config =>
             {
