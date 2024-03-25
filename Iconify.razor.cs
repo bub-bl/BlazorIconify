@@ -14,6 +14,7 @@ public partial class Iconify : ComponentBase
 
     [Inject] public HttpClient HttpClient { get; set; } = null!;
     [Inject] public ILocalStorageService LocalStorage { get; set; } = null!;
+    [Inject] public Registry Registry { get; set; } = null!;
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object> Attributes { get; set; } = null!;
@@ -32,7 +33,10 @@ public partial class Iconify : ComponentBase
 
             if (await IsCached(prefix, icon))
             {
-                _svg = await LocalStorage.GetItemAsStringAsync(Icon);
+                var metadata = await Registry.GetIcon(Icon);
+                if (metadata is null) return;
+                
+                _svg = metadata.Content;
                 _previousIcon = Icon;
             }
             else
@@ -44,8 +48,13 @@ public partial class Iconify : ComponentBase
                     Console.WriteLine($"Failed to fetch icon {this}");
                     return;
                 }
-                
-                await LocalStorage.SetItemAsStringAsync(Icon, _svg);
+
+                await Registry.AddIcon(new IconMetadata
+                {
+                    Name = Icon,
+                    Content = _svg,
+                    TimeFetched = DateTime.Now
+                });
             }
 
             // TODO - Find a better way to do this
