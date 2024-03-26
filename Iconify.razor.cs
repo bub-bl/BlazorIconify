@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Xml;
 using Blazored.LocalStorage;
 using Iconify.Extensions;
 using Microsoft.AspNetCore.Components;
@@ -12,7 +13,7 @@ public partial class Iconify : ComponentBase
 
     private string _previousIcon = string.Empty;
     private string _svg = string.Empty;
-
+    
     [Inject] public HttpClient HttpClient { get; set; } = null!;
     [Inject] public ILocalStorageService LocalStorage { get; set; } = null!;
     [Inject] public Registry Registry { get; set; } = null!;
@@ -58,16 +59,11 @@ public partial class Iconify : ComponentBase
                 });
             }
 
-            // TODO - Find a better way to do this
-            // Remove the fill attribute, we can't define custom color without it
-            _svg = _svg.Replace("fill=\"white\"", "")
-                // Remove width and height attributes
-                .Replace("width=\"1em\"", "")
-                .Replace("height=\"1em\"", "")
-                // Adding class to the svg element
-                .Replace("xmlns=\"http://www.w3.org/2000/svg\"",
-                    $"xmlns=\"http://www.w3.org/2000/svg\" class=\"{Attributes.Get("i-class")}\"");
-
+            var svg = TryConvertToXml(_svg);
+            if (svg is null) return;
+            
+            UpdateSvg(svg);
+            
             if (string.IsNullOrEmpty(_svg))
                 Console.WriteLine($"Failed to fetch icon {this}");
 
@@ -88,5 +84,45 @@ public partial class Iconify : ComponentBase
 
         iconContents = string.Empty;
         return iconContents;
+    }
+
+    private static XmlDocument? TryConvertToXml(string content)
+    {
+        try
+        {
+            var document = new XmlDocument();
+            document.LoadXml(content);
+
+            return document;
+        }
+        catch (XmlException ex)
+        {
+            Console.WriteLine("Failed to parse xml from svg file.");
+        }
+
+        return null;
+    }
+    
+    private void UpdateSvg(XmlDocument document)
+    {
+        var svg = document.DocumentElement;
+        
+        if (svg is null)
+        {
+            Console.WriteLine("Failed to find svg element.");
+            return;
+        }
+        
+        svg.SetAttribute("class", Attributes.Get("i-class"));
+        svg.RemoveAttribute("width");
+        svg.RemoveAttribute("height");
+
+        foreach (XmlElement child in svg.ChildNodes)
+        {
+            if (child.Name.ToLower() is not "path") continue;
+            child.RemoveAttribute("fill");
+        }
+        
+        _svg = svg.InnerXml;
     }
 }
