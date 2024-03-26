@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <PackageId>BlazorIconify</PackageId>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <Authors>bub.bl</Authors>
         <PackageDescription>This package allow you to use Iconify icons in blazor.</PackageDescription>
         <RepositoryUrl>https://github.com/bub-bl/BlazorIconify</RepositoryUrl>
@@ -14,7 +14,7 @@
         <Description>An unofficial Iconify wrapper for Blazor</Description>
         <PackageProjectUrl>https://github.com/bub-bl/BlazorIconify</PackageProjectUrl>
         <PackageIcon>logo.png</PackageIcon>
-        <PackageTags>Icon Iconify</PackageTags>
+        <PackageTags>Icons Iconify MAUI Blazor</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
