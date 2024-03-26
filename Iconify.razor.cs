@@ -28,7 +28,7 @@ public partial class Iconify : ComponentBase
     {
         if (string.IsNullOrEmpty(Icon))
         {
-            // Fallback to error icon if fetching fails
+            // Fallback to error icon if no icon is provided
             Icon = ErrorIcon;
             return;
         }
