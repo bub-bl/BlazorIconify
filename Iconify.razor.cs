@@ -71,7 +71,6 @@ public partial class Iconify : ComponentBase
             Console.WriteLine($"Failed to fetch icon {this}");
         
         StateHasChanged();
-        Console.WriteLine("Update");
     }
 
     private async Task<string> FetchIconAsync(string url)
