@@ -33,13 +33,14 @@ public partial class Iconify : ComponentBase
         // Only fetch the icon if it has changed
         if (_previousIcon != Icon)
         {
+            _previousIcon = Icon;
+            
             if (await Registry.IsCached(Icon))
             {
                 var metadata = await Registry.GetIcon(Icon);
                 if (metadata is null) return;
 
                 _svg = metadata.Content;
-                _previousIcon = Icon;
             }
             else
             {
@@ -59,15 +60,13 @@ public partial class Iconify : ComponentBase
                 });
             }
 
+            if (string.IsNullOrEmpty(_svg))
+                Console.WriteLine($"Failed to fetch icon {this}");
+            
             var svg = TryConvertToXml(_svg);
             if (svg is null) return;
             
             UpdateSvg(svg);
-            
-            if (string.IsNullOrEmpty(_svg))
-                Console.WriteLine($"Failed to fetch icon {this}");
-
-            _previousIcon = Icon;
             StateHasChanged();
         }
     }
