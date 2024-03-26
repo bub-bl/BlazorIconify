@@ -1,5 +1,5 @@
 ﻿<main @attributes="@Attributes" 
-      class="flex justify-center items-center @Attributes.Get("class")" 
+      class="@Attributes.Get("class")" 
       style="@Attributes.Get("style")">
     @((MarkupString)_svg)
 </main>
