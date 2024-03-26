@@ -39,7 +39,10 @@ public partial class Iconify : ComponentBase
             var metadata = await Registry.GetIcon(Icon);
             if (metadata is null) return;
 
-            _svg = metadata.Content;
+            var svg = TryParseToXml(metadata.Content);
+            if (svg is null) return;
+            
+            UpdateSvg(svg);
         }
         else
         {
