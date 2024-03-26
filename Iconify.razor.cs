@@ -11,9 +11,8 @@ public partial class Iconify : ComponentBase
     private const string API = "https://api.iconify.design/";
     private const string ErrorIcon = "ic:baseline-do-not-disturb";
 
-    private string _previousIcon = string.Empty;
     private string _svg = string.Empty;
-    
+
     [Inject] public HttpClient HttpClient { get; set; } = null!;
     [Inject] public ILocalStorageService LocalStorage { get; set; } = null!;
     [Inject] public Registry Registry { get; set; } = null!;
@@ -28,53 +27,54 @@ public partial class Iconify : ComponentBase
     protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(Icon))
+        {
+            // Fallback to error icon if fetching fails
             Icon = ErrorIcon;
+            return;
+        }
         
         // Only fetch the icon if it has changed
-        if (_previousIcon != Icon)
+        if (await Registry.IsCached(Icon))
         {
-            _previousIcon = Icon;
-            
-            if (await Registry.IsCached(Icon))
-            {
-                var metadata = await Registry.GetIcon(Icon);
-                if (metadata is null) return;
+            var metadata = await Registry.GetIcon(Icon);
+            if (metadata is null) return;
 
-                _svg = metadata.Content;
-            }
-            else
-            {
-                _svg = await FetchIconAsync(IconUrl);
-
-                if (string.IsNullOrEmpty(_svg))
-                {
-                    Console.WriteLine($"Failed to fetch icon {(!string.IsNullOrEmpty(Icon) ? Icon : "\"null\"")}");
-                    return;
-                }
-
-                await Registry.AddIcon(new IconMetadata
-                {
-                    Name = Icon,
-                    Content = _svg,
-                    TimeFetched = DateTime.Now
-                });
-            }
+            _svg = metadata.Content;
+        }
+        else
+        {
+            _svg = await FetchIconAsync(IconUrl);
 
             if (string.IsNullOrEmpty(_svg))
-                Console.WriteLine($"Failed to fetch icon {this}");
+            {
+                Console.WriteLine($"Failed to fetch icon {(!string.IsNullOrEmpty(Icon) ? Icon : "\"null\"")}");
+                return;
+            }
             
-            var svg = TryConvertToXml(_svg);
+            var svg = TryParseToXml(_svg);
             if (svg is null) return;
             
             UpdateSvg(svg);
-            StateHasChanged();
+
+            await Registry.AddIcon(new IconMetadata
+            {
+                Name = Icon,
+                Content = _svg,
+                TimeFetched = DateTime.Now
+            });
         }
+
+        if (string.IsNullOrEmpty(_svg))
+            Console.WriteLine($"Failed to fetch icon {this}");
+        
+        StateHasChanged();
+        Console.WriteLine("Update");
     }
-    
+
     private async Task<string> FetchIconAsync(string url)
     {
         if (string.IsNullOrEmpty(Icon)) return string.Empty;
-        
+
         var response = await HttpClient.GetByteArrayAsync(url);
         var iconContents = Encoding.UTF8.GetString(response);
 
@@ -85,7 +85,7 @@ public partial class Iconify : ComponentBase
         return iconContents;
     }
 
-    private static XmlDocument? TryConvertToXml(string content)
+    private static XmlDocument? TryParseToXml(string content)
     {
         try
         {
@@ -101,27 +101,38 @@ public partial class Iconify : ComponentBase
 
         return null;
     }
-    
+
     private void UpdateSvg(XmlDocument document)
     {
-        var svg = document.DocumentElement;
+        var rootElement = document.DocumentElement;
         
-        if (svg is null)
+        switch (rootElement)
+        {
+            case null:
+                Console.WriteLine("No root element.");
+                return;
+            case not {Name: "svg"} or null:
+                Console.WriteLine("Failed to find svg element.");
+                return;
+        }
+
+        if (rootElement is null)
         {
             Console.WriteLine("Failed to find svg element.");
             return;
         }
-        
-        svg.SetAttribute("class", Attributes.Get("i-class"));
-        svg.RemoveAttribute("width");
-        svg.RemoveAttribute("height");
 
-        foreach (XmlElement child in svg.ChildNodes)
+        rootElement.SetAttribute("class", Attributes.Get("i-class"));
+        rootElement.SetAttribute("style", Attributes.Get("i-style"));
+        rootElement.RemoveAttribute("width");
+        rootElement.RemoveAttribute("height");
+        
+        foreach (XmlElement child in rootElement.ChildNodes)
         {
             if (child.Name.ToLower() is not "path") continue;
             child.RemoveAttribute("fill");
         }
-        
-        _svg = svg.InnerXml;
+
+        _svg = rootElement.OuterXml;
     }
 }
