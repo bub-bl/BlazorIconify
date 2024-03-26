@@ -23,7 +23,7 @@ public partial class Iconify : ComponentBase
 
     [Parameter] public string Icon { get; set; } = string.Empty;
 
-    private string IconUrl => $"{API}{Icon.Replace(':', '/')}.svg?color=white";
+    private string IconUrl => $"{API}{Icon.Replace(':', '/')}.svg";
 
     protected override async Task OnParametersSetAsync()
     {
