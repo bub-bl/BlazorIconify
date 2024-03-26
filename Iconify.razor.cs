@@ -8,6 +8,7 @@ namespace Iconify;
 public partial class Iconify : ComponentBase
 {
     private const string API = "https://api.iconify.design/";
+    private const string ErrorIcon = "ic:baseline-do-not-disturb";
 
     private string _previousIcon = string.Empty;
     private string _svg = string.Empty;
@@ -19,12 +20,15 @@ public partial class Iconify : ComponentBase
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object> Attributes { get; set; } = null!;
 
-    [Parameter] public string Icon { get; set; } = "fluent-emoji-flat:alarm-clock";
+    [Parameter] public string Icon { get; set; } = string.Empty;
 
     private string IconUrl => $"{API}{Icon.Replace(':', '/')}.svg?color=white";
 
     protected override async Task OnParametersSetAsync()
     {
+        if (string.IsNullOrEmpty(Icon))
+            Icon = ErrorIcon;
+        
         // Only fetch the icon if it has changed
         if (_previousIcon != Icon)
         {
@@ -57,6 +61,9 @@ public partial class Iconify : ComponentBase
             // TODO - Find a better way to do this
             // Remove the fill attribute, we can't define custom color without it
             _svg = _svg.Replace("fill=\"white\"", "")
+                // Remove width and height attributes
+                .Replace("width=\"1em\"", "")
+                .Replace("height=\"1em\"", "")
                 // Adding class to the svg element
                 .Replace("xmlns=\"http://www.w3.org/2000/svg\"",
                     $"xmlns=\"http://www.w3.org/2000/svg\" class=\"{Attributes.Get("i-class")}\"");
