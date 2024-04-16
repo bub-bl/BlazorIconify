@@ -12,6 +12,7 @@ public partial class Iconify : ComponentBase
     private const string ErrorIcon = "ic:baseline-do-not-disturb";
 
     private string _svg = string.Empty;
+    private bool _initialized;
 
     [Inject] public HttpClient HttpClient { get; set; } = null!;
     [Inject] public ILocalStorageService LocalStorage { get; set; } = null!;
@@ -24,15 +25,19 @@ public partial class Iconify : ComponentBase
 
     private string IconUrl => $"{API}{Icon.Replace(':', '/')}.svg";
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        _initialized = true;
+        
+        if (!firstRender) return;
+
         if (string.IsNullOrEmpty(Icon))
         {
             // Fallback to error icon if no icon is provided
             Icon = ErrorIcon;
             return;
         }
-        
+
         // Only fetch the icon if it has changed
         if (await Registry.IsCached(Icon))
         {
@@ -41,7 +46,7 @@ public partial class Iconify : ComponentBase
 
             var svg = TryParseToXml(metadata.Content);
             if (svg is null) return;
-            
+
             UpdateSvg(svg);
         }
         else
@@ -53,10 +58,10 @@ public partial class Iconify : ComponentBase
                 Console.WriteLine($"Failed to fetch icon {(!string.IsNullOrEmpty(Icon) ? Icon : "\"null\"")}");
                 return;
             }
-            
+
             var svg = TryParseToXml(_svg);
             if (svg is null) return;
-            
+
             UpdateSvg(svg);
 
             await Registry.AddIcon(new IconMetadata
@@ -69,8 +74,15 @@ public partial class Iconify : ComponentBase
 
         if (string.IsNullOrEmpty(_svg))
             Console.WriteLine($"Failed to fetch icon {this}");
-        
+
         StateHasChanged();
+        Console.WriteLine("RENDER ICONIFY");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_initialized) return;
+        await OnAfterRenderAsync(true);
     }
 
     private async Task<string> FetchIconAsync(string url)
@@ -107,13 +119,13 @@ public partial class Iconify : ComponentBase
     private void UpdateSvg(XmlDocument document)
     {
         var rootElement = document.DocumentElement;
-        
+
         switch (rootElement)
         {
             case null:
                 Console.WriteLine("No root element.");
                 return;
-            case not {Name: "svg"} or null:
+            case not { Name: "svg" } or null:
                 Console.WriteLine("Failed to find svg element.");
                 return;
         }
@@ -128,7 +140,7 @@ public partial class Iconify : ComponentBase
         rootElement.SetAttribute("style", Attributes.Get("i-style"));
         rootElement.RemoveAttribute("width");
         rootElement.RemoveAttribute("height");
-        
+
         foreach (XmlElement child in rootElement.ChildNodes)
         {
             if (child.Name.ToLower() is not "path") continue;
