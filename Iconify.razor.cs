@@ -76,7 +76,6 @@ public partial class Iconify : ComponentBase
             Console.WriteLine($"Failed to fetch icon {this}");
 
         StateHasChanged();
-        Console.WriteLine("RENDER ICONIFY");
     }
 
     protected override async Task OnParametersSetAsync()
